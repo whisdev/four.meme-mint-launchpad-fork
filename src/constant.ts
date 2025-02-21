@@ -3,21 +3,24 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const testVersion = false;
-
 const MAINNET_RPC_ENDPOINT = process.env['MAINNET_RPC_ENDPOINT']!;
 const TESTNET_RPC_ENDPOINT = process.env['TESTNET_RPC_ENDPOINT']!;
 
 export const OWNER = process.env['PRIVKEY']!;
 export const RANDOM_NUM = process.env['RANDOM_NUM']!;
+export const NODE_REAL_API = process.env['NODE_REAL_API']!;
 
 export const TOKEN_MANAGER_CONTRACT_V2_ADDRESS = "0x5c952063c7fc8610FFDB798152D69F0B9550762b";
-export const PANCAKE_SWAP_CONTRACT_ADDRESS = "";
+export const PANCAKE_V3_FACTORY_ADDRESS = "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865";
+export const PANCAKE_V3_SWAPROUTER_ADDRESS = "0x1b81D678ffb9C0263b24A97847620C99d213eB14";
+export const PANCAKE_V2_FACTORY_ADDRESS = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";
+export const PANCAKE_V2_SWAPROUTER_ADDRESS = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
+export const WBNB_ADDRESS = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
 
 export const FOUR_MEME_URL = "https://four.meme/meme-api";
-export const RPC_ENDPOINT = testVersion ? TESTNET_RPC_ENDPOINT : MAINNET_RPC_ENDPOINT;
+export const RPC_ENDPOINT = MAINNET_RPC_ENDPOINT;
 export const w3 = new Web3(new Web3.providers.HttpProvider(RPC_ENDPOINT!));
-export const chainId = testVersion ? 97 : 56
+export const chainId = 56 // testversion : 97
 
 export const RAISING_LIST = [
     {
