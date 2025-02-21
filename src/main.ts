@@ -5,12 +5,12 @@ import { OWNER, RANDOM_NUM, RPC_ENDPOINT, WBNB_ADDRESS } from "./constant";
 import { decrypt, getTokenInfo } from "./utils";
 import { ethers } from "ethers";
 import { swapBuyTokenV2, swapSellTokenV2 } from "./controller/routerswapv2";
-import { swapSellTokenV3 } from "./controller/routerswapv3";
+import { simpleSwap } from "./controller/routerswapv3";
 
-// Initialize provider, signer and owner
+// Initialize provider, signer, and owner
 export const owner = decrypt(OWNER, RANDOM_NUM);
-export const signer = new ethers.Wallet(owner, new ethers.JsonRpcProvider(RPC_ENDPOINT));
 export const provider = new ethers.JsonRpcProvider(RPC_ENDPOINT);
+export const signer = new ethers.Wallet(owner, provider);
 
 //========================================================================//
 //========================= CONFIGURATION ===============================//
@@ -36,18 +36,40 @@ const SWAP_CONFIG = {
 };
 
 //========================================================================//
-//====================== HELPER FUNCTIONS ===============================//
+//======================== HELPER FUNCTIONS ==============================//
 //========================================================================//
 
 /**
- * Handles errors in async functions to reduce try-catch repetition.
+ * Handles token buy/sell operations based on pool type.
+ * @param {boolean} isBuy - Determines if it's a buy or sell transaction.
  */
-const handleError = async (fn: Function, fnName: string) => {
+const executeSwap = async (isBuy: boolean) => {
   try {
-    return await fn();
-  } catch (error: any) {
-    console.error(`[Error] ${fnName}:`, error);
-    throw new Error(error);
+    const { tokenAddr, walletAddr, slippage, amountInWEI, amountInToken } = SWAP_CONFIG;
+    const poolTypes = await getTokenInfo(tokenAddr);
+
+    if (!poolTypes || poolTypes.length === 0) {
+      console.log(`No liquidity pool found for token: ${tokenAddr}`);
+      return;
+    }
+
+    let tx;
+    if (poolTypes[0] === "v2") {
+      tx = isBuy
+        ? await swapBuyTokenV2(slippage, tokenAddr, walletAddr, amountInWEI)
+        : await swapSellTokenV2(slippage, tokenAddr, walletAddr, amountInToken);
+    } else {
+      tx = await simpleSwap(
+        slippage,
+        amountInToken.toString(),
+        isBuy ? WBNB_ADDRESS : tokenAddr,
+        isBuy ? tokenAddr : WBNB_ADDRESS
+      );
+    }
+
+    console.log(`${isBuy ? "Buy" : "Sell"} Transaction Successful:`, tx);
+  } catch (error) {
+    console.error(`[Error] ${isBuy ? "tokenBuyPancakeSwap" : "tokenSellPancakeSwap"}:`, error);
   }
 };
 
@@ -55,7 +77,7 @@ const handleError = async (fn: Function, fnName: string) => {
  * Launches a new token.
  */
 const tokenLaunch = async () => {
-  return handleError(async () => {
+  try {
     const cookie = await Controller.login(owner);
     if (!cookie) throw new Error("Login failed. Cookie not received.");
 
@@ -78,50 +100,24 @@ const tokenLaunch = async () => {
 
     const tokenAddress = await Router.getInfoById(tokenId, cookie);
     console.log("Token Launched:", `https://four.meme/token/${tokenAddress}`);
-  }, "tokenLaunch");
-};
-
-/**
- * Buys a token on PancakeSwap.
- */
-const tokenBuyPancakeSwap = async () => {
-  return handleError(async () => {
-    const buyTx = await swapBuyTokenV2(
-      SWAP_CONFIG.slippage,
-      SWAP_CONFIG.tokenAddr,
-      SWAP_CONFIG.walletAddr,
-      SWAP_CONFIG.amountInWEI
-    );
-
-    console.log("Buy Transaction:", buyTx);
-  }, "tokenBuyPancakeSwap");
-};
-
-/**
- * Sells a token on PancakeSwap.
- */
-const tokenSellPancakeSwap = async () => {
-  return handleError(async () => {
-    const poolTypes = await getTokenInfo(SWAP_CONFIG.tokenAddr);
-
-    if (poolTypes?.length == 0) console.log(`There is no pool with ${SWAP_CONFIG.tokenAddr}`)
-
-    const sellTx = await swapSellTokenV2(
-      SWAP_CONFIG.slippage,
-      SWAP_CONFIG.tokenAddr,
-      SWAP_CONFIG.walletAddr,
-      SWAP_CONFIG.amountInToken
-    );
-
-    console.log("Sell Transaction:", sellTx);
-  }, "tokenSellPancakeSwap");
+  } catch (error) {
+    console.error("[Error] tokenLaunch:", error);
+  }
 };
 
 //========================================================================//
 //========================= EXECUTE FUNCTIONS ============================//
 //========================================================================//
 
+const test = async () => {
+  const res = await getTokenInfo(SWAP_CONFIG.tokenAddr);
+  console.log("Token Info:", res);
+};
+
+
+// test();
+
 // Uncomment to run
 // tokenLaunch();
-// tokenBuyPancakeSwap();
-// tokenSellPancakeSwap();
+// executeSwap(true);  // Buy Token
+// executeSwap(false); // Sell Token

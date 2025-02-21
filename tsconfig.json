@@ -3,7 +3,7 @@
 		// "module": "esnext",
 		// "moduleResolution": "bundler",
 		"module": "commonjs",
-		"target": "es2015",
+		"target": "es2020",
 		"lib": ["es6"],
 		"allowJs": true,
 		"strict": true,

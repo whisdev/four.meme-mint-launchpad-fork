@@ -95,6 +95,7 @@ export const get_PANCAKE_V2_FACTORY_abi = (): ContractAbi => getABI("Pancake_v2_
 export const get_PANCAKE_V2_ROUTER_abi = (): ContractAbi => getABI("Pancake_v2_router");
 export const get_PANCAKE_V3_FACTORY_abi = (): ContractAbi => getABI("Pancake_v3_factory");
 export const get_PANCAKE_V3_ROUTER_abi = (): ContractAbi => getABI("Pancake_v3_router");
+export const get_PANCAKE_QUOTER_abi = (): ContractAbi => getABI("Pancake_quoter");
 export const get_TOKEN_abi = (): ContractAbi => getABI("erc20");
 
 export async function getTokenInfo(tokenAddress: string) {

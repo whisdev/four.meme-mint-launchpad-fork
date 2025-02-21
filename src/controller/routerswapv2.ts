@@ -22,7 +22,7 @@ export const getExpectedAmountsOut = async (amountIn: number, tokenA: string, to
         const decimal = await getDecimal(tokenB);
 
         const amountInWEI = w3.utils.toWei(amountIn.toString(), 'ether');
-        const expectedAmountOut = await routerV2CONTRACT.getAmountsOut(amountInWEI, [tokenA, tokenB]);
+        const expectedAmountOut = await routerV2CONTRACT.getAmountsOut.staticCall(amountInWEI, [tokenA, tokenB]);
 
         const expectedAmountOutString = expectedAmountOut[expectedAmountOut.length - 1].toString();
         const slippageAdjustedAmountOut = (BigInt(expectedAmountOutString) * BigInt((1 - slippage) * 1000000000)) / BigInt(1000000000);
