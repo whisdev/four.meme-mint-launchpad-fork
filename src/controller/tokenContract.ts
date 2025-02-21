@@ -2,10 +2,9 @@ import { ethers } from "ethers";
 
 import { get_TOKEN_abi } from "../utils";
 import { PANCAKE_V2_SWAPROUTER_ADDRESS, RPC_ENDPOINT } from "../constant";
-import { owner } from "../main";
+import { owner, signer } from "../main";
 
 const tokenABI = get_TOKEN_abi();
-const signer = new ethers.Wallet(owner, new ethers.JsonRpcProvider(RPC_ENDPOINT));
 
 export const getDecimal = async (tokenAddr: string) => {
     try {

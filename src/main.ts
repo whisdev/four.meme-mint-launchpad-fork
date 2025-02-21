@@ -2,12 +2,14 @@ import * as Router from "./routes";
 import * as Controller from "./controller";
 
 import { OWNER, RANDOM_NUM, RPC_ENDPOINT, WBNB_ADDRESS } from "./constant";
-import { decrypt } from "./utils";
+import { decrypt, getTokenInfo } from "./utils";
 import { ethers } from "ethers";
-import { swapBuyToken, swapSellToken } from "./controller/routerswapv2";
+import { swapBuyTokenV2, swapSellTokenV2 } from "./controller/routerswapv2";
+import { swapSellTokenV3 } from "./controller/routerswapv3";
 
-// Initialize provider and owner
+// Initialize provider, signer and owner
 export const owner = decrypt(OWNER, RANDOM_NUM);
+export const signer = new ethers.Wallet(owner, new ethers.JsonRpcProvider(RPC_ENDPOINT));
 export const provider = new ethers.JsonRpcProvider(RPC_ENDPOINT);
 
 //========================================================================//
@@ -26,7 +28,7 @@ const TOKEN_CONFIG = {
 };
 
 const SWAP_CONFIG = {
-  tokenAddr: "0x2dce707c47fd9c0f1833a281f45e3e41ace2725b",
+  tokenAddr: "0x36F5675029E129B5fCaBb29eC750ed268520AcF7",
   slippage: 0.2,
   walletAddr: "0x3b356Eb7627814C5C9683bb089584df341F5A90e",
   amountInWEI: 0.5,
@@ -84,7 +86,7 @@ const tokenLaunch = async () => {
  */
 const tokenBuyPancakeSwap = async () => {
   return handleError(async () => {
-    const buyTx = await swapBuyToken(
+    const buyTx = await swapBuyTokenV2(
       SWAP_CONFIG.slippage,
       SWAP_CONFIG.tokenAddr,
       SWAP_CONFIG.walletAddr,
@@ -100,7 +102,11 @@ const tokenBuyPancakeSwap = async () => {
  */
 const tokenSellPancakeSwap = async () => {
   return handleError(async () => {
-    const sellTx = await swapSellToken(
+    const poolTypes = await getTokenInfo(SWAP_CONFIG.tokenAddr);
+
+    if (poolTypes?.length == 0) console.log(`There is no pool with ${SWAP_CONFIG.tokenAddr}`)
+
+    const sellTx = await swapSellTokenV2(
       SWAP_CONFIG.slippage,
       SWAP_CONFIG.tokenAddr,
       SWAP_CONFIG.walletAddr,

@@ -9,26 +9,13 @@ import {
 } from "../constant";
 import { getAllowance, getDecimal, tokenApprove } from "./tokenContract"
 import { get_PANCAKE_V2_FACTORY_abi, get_PANCAKE_V2_ROUTER_abi, get_TOKEN_abi } from "../utils";
-import { owner } from "../main";
+import { owner, signer } from "../main";
 
 const factoryV2ABI = get_PANCAKE_V2_FACTORY_abi();
 const routerV2ABI = get_PANCAKE_V2_ROUTER_abi();
 
-const signer = new ethers.Wallet(owner, new ethers.JsonRpcProvider(RPC_ENDPOINT));
 const factoryV2CONTRACT = new ethers.Contract(PANCAKE_V2_FACTORY_ADDRESS, factoryV2ABI, signer);
 const routerV2CONTRACT = new ethers.Contract(PANCAKE_V2_SWAPROUTER_ADDRESS, routerV2ABI, signer);
-
-export const getPair = async (tokenA: string, tokenB: string) => {
-    try {
-        const pairAddress = await factoryV2CONTRACT.getPair(tokenA, tokenB);
-
-        if (pairAddress == "0x0000000000000000000000000000000000000000") return null;
-        return pairAddress;
-    } catch (error: any) {
-        console.log('error :>> ', error);
-        throw new Error(error)
-    }
-}
 
 export const getExpectedAmountsOut = async (amountIn: number, tokenA: string, tokenB: string, slippage: number) => {
     try {
@@ -48,7 +35,7 @@ export const getExpectedAmountsOut = async (amountIn: number, tokenA: string, to
     }
 }
 
-export const swapBuyToken = async (slippage: number, tokenAddr: string, walletAddr: string, amountInWEI: number) => {
+export const swapBuyTokenV2 = async (slippage: number, tokenAddr: string, walletAddr: string, amountInWEI: number) => {
     try {
         const deadline = Math.floor(Date.now() / 1000) + 1200;
         const amountOutMin = await getExpectedAmountsOut(amountInWEI, WBNB_ADDRESS, tokenAddr, slippage);
@@ -73,7 +60,7 @@ export const swapBuyToken = async (slippage: number, tokenAddr: string, walletAd
     }
 }
 
-export const swapSellToken = async (slippage: number, tokenAddr: string, walletAddr: string, amountIn: number) => {
+export const swapSellTokenV2 = async (slippage: number, tokenAddr: string, walletAddr: string, amountIn: number) => {
     try {
         const deadline = Math.floor(Date.now() / 1000) + 1200;
         const amountOutMin = await getExpectedAmountsOut(amountIn, tokenAddr, WBNB_ADDRESS, slippage);

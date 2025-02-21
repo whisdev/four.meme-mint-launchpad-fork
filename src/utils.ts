@@ -1,5 +1,5 @@
 import { ContractAbi, Transaction } from "web3";
-import { chainId, RPC_ENDPOINT, w3 } from "./constant";
+import { chainId, RPC_ENDPOINT, w3, WBNB_ADDRESS } from "./constant";
 import axios from "axios";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -64,7 +64,7 @@ export const getBalance = async (walletAddr: string) => {
         const balanceBSC = parseFloat(w3.utils.fromWei(balanceWei, "ether"));
 
         console.log(`[Balance] Wallet: ${walletAddr} | BSC: ${balanceBSC} | WEI: ${balanceWei}`);
-        
+
         return { bsc: balanceBSC, wei: balanceWei };
     } catch (error) {
         console.error("[Error] getBalance:", error);
@@ -81,7 +81,7 @@ export const getBalance = async (walletAddr: string) => {
  */
 const getABI = (fileName: string): ContractAbi => {
     try {
-        const filePath = path.join(__dirname, "src", "abi", `${fileName}.json`);
+        const filePath = path.join(__dirname, "abi", `${fileName}.json`);
         return JSON.parse(fs.readFileSync(filePath, "utf8"));
     } catch (error) {
         console.error(`[Error] Failed to load ABI: ${fileName}`, error);
@@ -96,3 +96,34 @@ export const get_PANCAKE_V2_ROUTER_abi = (): ContractAbi => getABI("Pancake_v2_r
 export const get_PANCAKE_V3_FACTORY_abi = (): ContractAbi => getABI("Pancake_v3_factory");
 export const get_PANCAKE_V3_ROUTER_abi = (): ContractAbi => getABI("Pancake_v3_router");
 export const get_TOKEN_abi = (): ContractAbi => getABI("erc20");
+
+export async function getTokenInfo(tokenAddress: string) {
+    try {
+        const response = await axios.get(
+            `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`
+        );
+        const data = response.data;
+
+        if (!data.pairs || data.pairs.length === 0) {
+            return null;
+        }
+
+        let labels = [];
+
+        for (const pair of data.pairs) {
+            if (
+                pair.chainId === "bsc" &&
+                pair.dexId === "pancakeswap" &&
+                (pair.baseToken.address.toUpperCase() === tokenAddress.toUpperCase() || pair.quoteToken.address.toUpperCase() === tokenAddress.toUpperCase()) &&
+                (pair.baseToken.address.toUpperCase() === WBNB_ADDRESS.toUpperCase() || pair.quoteToken.address.toUpperCase() === WBNB_ADDRESS.toUpperCase())
+            ) {
+                console.log('pair.labels[0] :>> ', pair.labels);
+                labels.push(pair.labels[0]);
+            }
+        }
+
+        return labels;
+    } catch (error) {
+        return null;
+    }
+}
