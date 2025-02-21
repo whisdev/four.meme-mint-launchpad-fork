@@ -19,10 +19,6 @@ const factoryV3ABI = get_PANCAKE_V3_FACTORY_abi();
 const routerV3ABI = get_PANCAKE_V3_ROUTER_abi();
 const quoterABI = get_PANCAKE_QUOTER_abi();
 
-const factoryV3CONTRACT = new ethers.Contract(PANCAKE_V3_FACTORY_ADDRESS, factoryV3ABI, provider);
-const routerV3CONTRACT = new ethers.Contract(PANCAKE_V3_SWAPROUTER_ADDRESS, routerV3ABI, provider);
-const quoterCONTRACT = new ethers.Contract(PANCAKE_QUOTER_ADDRESS, quoterABI, provider);
-
 export const simpleSwap = async (slippage: number, inputAmount: string, tokenIn: string, tokenOut: string) => {
     const decimal0 = await getDecimal(tokenIn);
     const symbol0 = await getTokenSymbol(tokenIn);
@@ -33,7 +29,8 @@ export const simpleSwap = async (slippage: number, inputAmount: string, tokenIn:
     const token1: Token = new Token(chainId, `0x${tokenOut.slice(2)}`, decimal1, symbol1);
 
     const pool = await getPool(token0, token1);
-    const [amountOutWei] = await quoterCONTRACT.quoteExactInputSingle.staticCallResult({
+    const quoterCONTRACT = new ethers.Contract(PANCAKE_QUOTER_ADDRESS, quoterABI, signer);
+    const [amountOutWei] = await quoterCONTRACT.quoteExactInputSingle({
         tokenIn: tokenIn,
         tokenOut: tokenOut,
         amountIn: inputAmount,
@@ -60,11 +57,12 @@ export const simpleSwap = async (slippage: number, inputAmount: string, tokenIn:
         sqrtPriceLimitX96: 0,
     };
 
-    await tokenApprove(tokenIn);
+    await tokenApprove(tokenIn, PANCAKE_V3_SWAPROUTER_ADDRESS);
 
     const { gasPrice } = await provider.getFeeData();
     if (!gasPrice) throw new Error("Failed to retrieve gas price");
 
+    const routerV3CONTRACT = new ethers.Contract(PANCAKE_V3_SWAPROUTER_ADDRESS, routerV3ABI, signer);
     const gasLimit = await routerV3CONTRACT.exactInputSingle.estimateGas(params);
     const tx = await routerV3CONTRACT.exactInputSingle(params, { gasLimit, gasPrice });
 
@@ -74,7 +72,8 @@ export const simpleSwap = async (slippage: number, inputAmount: string, tokenIn:
 
 export const getPool = async (tokenA: Token, tokenB: Token, feeAmount = FeeAmount.MEDIUM) => {
 
-    const poolAddress = await factoryV3CONTRACT.getPool.staticCall(tokenA.address, tokenB.address, feeAmount);
+    const factoryV3CONTRACT = new ethers.Contract(PANCAKE_V3_FACTORY_ADDRESS, factoryV3ABI, provider);
+    const poolAddress = await factoryV3CONTRACT.getPool(tokenA.address, tokenB.address, feeAmount);
 
     if (!poolAddress || poolAddress === "0x0000000000000000000000000000000000000000") {
         throw new Error("No pair address found for the provided token pair.");

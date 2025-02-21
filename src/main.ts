@@ -32,7 +32,7 @@ const SWAP_CONFIG = {
   slippage: 0.2,
   walletAddr: "0x3b356Eb7627814C5C9683bb089584df341F5A90e",
   amountInWEI: 0.5,
-  amountInToken: 100000,
+  amountInToken: 100000000,
 };
 
 //========================================================================//
@@ -98,8 +98,8 @@ const tokenLaunch = async () => {
     const signedTxHash = await Controller.signCreateTokenTx(createArg, signature, owner);
     if (!signedTxHash) throw new Error("Transaction signing failed.");
 
-    const tokenAddress = await Router.getInfoById(tokenId, cookie);
-    console.log("Token Launched:", `https://four.meme/token/${tokenAddress}`);
+    // const tokenAddress = await Router.getInfoById(tokenId, cookie);
+    // console.log("Token Launched:", `https://four.meme/token/${tokenAddress}`);
   } catch (error) {
     console.error("[Error] tokenLaunch:", error);
   }
@@ -119,5 +119,5 @@ const test = async () => {
 
 // Uncomment to run
 // tokenLaunch();
-// executeSwap(true);  // Buy Token
+executeSwap(true);  // Buy Token
 // executeSwap(false); // Sell Token

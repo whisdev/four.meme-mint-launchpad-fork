@@ -9,7 +9,7 @@ const tokenABI = get_TOKEN_abi();
 export const getDecimal = async (tokenAddr: string) => {
     try {
         const tokenContract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const decimal = await tokenContract.decimal.staticCall();
+        const decimal = await tokenContract.decimals();
 
         return decimal;
     } catch (error: any) {
@@ -20,7 +20,7 @@ export const getDecimal = async (tokenAddr: string) => {
 
 export const getAllowance = async (tokenAddr: string, walletAddr: string) => {
     try {
-        const tokenContract = new ethers.Contract(tokenAddr, tokenABI, provider);
+        const tokenContract = new ethers.Contract(tokenAddr, tokenABI, signer);
         const allowance = await tokenContract.allowance(walletAddr, PANCAKE_V2_SWAPROUTER_ADDRESS);
 
         return allowance;
@@ -30,15 +30,20 @@ export const getAllowance = async (tokenAddr: string, walletAddr: string) => {
     }
 }
 
-export const tokenApprove = async (tokenAddr: string) => {
+export const tokenApprove = async (tokenAddr: string, routerAddr: string) => {
     try {
-        const tokenContract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const decimal = await tokenContract.decimal.staticCall();
+        const tokenContract = new ethers.Contract(tokenAddr, tokenABI, signer);
 
         const approveAmount = 1000000000000000000000000;
-        const approveTx = await tokenContract.approve(PANCAKE_V2_SWAPROUTER_ADDRESS, approveAmount * 10 ** Number(decimal));
+
+        console.log('approveAmount :>> ', approveAmount);
+        const approveTx = await tokenContract.approve(routerAddr, approveAmount);
+
+        console.log('approveTx :>> ', approveTx);
 
         await approveTx.wait();
+
+        console.log('approveTx.hash :>> ', approveTx.hash);
 
         return approveTx.hash;
     } catch (error: any) {
@@ -50,7 +55,7 @@ export const tokenApprove = async (tokenAddr: string) => {
 export const getTokenSymbol = async (tokenAddr: string) => {
     try {
         const tokenContract = new ethers.Contract(tokenAddr, tokenABI, provider);
-        const tokenSymbol = await tokenContract.symbol.staticCall();
+        const tokenSymbol = await tokenContract.symbol();
 
         return tokenSymbol;
     } catch (error: any) {

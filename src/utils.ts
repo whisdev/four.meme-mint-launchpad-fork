@@ -118,7 +118,6 @@ export async function getTokenInfo(tokenAddress: string) {
                 (pair.baseToken.address.toUpperCase() === tokenAddress.toUpperCase() || pair.quoteToken.address.toUpperCase() === tokenAddress.toUpperCase()) &&
                 (pair.baseToken.address.toUpperCase() === WBNB_ADDRESS.toUpperCase() || pair.quoteToken.address.toUpperCase() === WBNB_ADDRESS.toUpperCase())
             ) {
-                console.log('pair.labels[0] :>> ', pair.labels);
                 labels.push(pair.labels[0]);
             }
         }
